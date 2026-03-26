@@ -344,7 +344,7 @@ class MovieService:
                 ratio = difflib.SequenceMatcher(
                     None, query_lower, title.lower()
                 ).ratio()
-                if ratio >= 0.40:
+                if ratio >= 0.55:
                     scored[mid] = max(scored.get(mid, 0.0), ratio)
 
         # --- Pass 2: per-word fuzzy match (handles "matrx" -> "Matrix") ---
