@@ -1,0 +1,50 @@
+# Data (DVC-tracked)
+data/raw/
+data/processed/
+models/collaborative/*.joblib
+models/collaborative/*.npz
+models/content_based/*.joblib
+models/als/*.npy
+models/als/als_model/
+models/hybrid/hybrid_weights.json
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# DVC
+/dvc.lock
+
+# SQLite
+*.db
+
+# Misc
+*.log

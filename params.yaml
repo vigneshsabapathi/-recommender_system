@@ -1,0 +1,27 @@
+data:
+  test_ratio: 0.2
+  min_user_ratings: 20
+  min_movie_ratings: 50
+
+collaborative:
+  similarity_metric: "cosine"
+  top_k_similar: 50
+  n_recommendations: 20
+
+content_based:
+  tfidf_max_features: 5000
+  genome_weight: 0.7
+  genre_weight: 0.3
+  n_recommendations: 20
+
+als:
+  rank: 64
+  max_iter: 15
+  reg_param: 0.1
+  cold_start_strategy: "drop"
+  n_recommendations: 20
+
+hybrid:
+  cf_weight: 0.4
+  content_weight: 0.3
+  als_weight: 0.3
