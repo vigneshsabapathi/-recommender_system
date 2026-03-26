@@ -1,0 +1,98 @@
+stages:
+  ingest:
+    cmd: python -m src.data.ingest
+    deps:
+      - src/data/ingest.py
+    outs:
+      - data/raw/ratings.csv
+      - data/raw/movies.csv
+      - data/raw/links.csv
+      - data/raw/tags.csv
+      - data/raw/genome-scores.csv
+      - data/raw/genome-tags.csv
+
+  preprocess:
+    cmd: python -m src.data.preprocess
+    deps:
+      - src/data/preprocess.py
+      - data/raw/ratings.csv
+      - data/raw/movies.csv
+      - data/raw/links.csv
+      - data/raw/tags.csv
+    params:
+      - data.min_user_ratings
+      - data.min_movie_ratings
+      - data.test_ratio
+    outs:
+      - data/processed/train_ratings.csv
+      - data/processed/test_ratings.csv
+      - data/processed/ratings_clean.csv
+      - data/processed/movie_metadata.csv
+
+  feature_engineering:
+    cmd: python -m src.data.feature_engineering
+    deps:
+      - src/data/feature_engineering.py
+      - data/processed/train_ratings.csv
+      - data/processed/movie_metadata.csv
+      - data/raw/genome-scores.csv
+      - data/raw/genome-tags.csv
+    params:
+      - content_based.tfidf_max_features
+      - content_based.genome_weight
+      - content_based.genre_weight
+    outs:
+      - data/processed/user_item_matrix.npz
+      - data/processed/content_features.npz
+      - data/processed/movie_id_to_idx.json
+      - data/processed/user_id_to_idx.json
+
+  train_collaborative:
+    cmd: python -m src.pipeline.train collaborative
+    deps:
+      - src/pipeline/train.py
+      - src/models/collaborative.py
+      - data/processed/user_item_matrix.npz
+      - data/processed/movie_id_to_idx.json
+      - data/processed/user_id_to_idx.json
+    params:
+      - collaborative
+    outs:
+      - models/collaborative/
+
+  train_content_based:
+    cmd: python -m src.pipeline.train content_based
+    deps:
+      - src/pipeline/train.py
+      - src/models/content_based.py
+      - data/processed/content_features.npz
+      - data/processed/user_item_matrix.npz
+      - data/processed/movie_id_to_idx.json
+      - data/processed/user_id_to_idx.json
+    params:
+      - content_based
+    outs:
+      - models/content_based/
+
+  train_als:
+    cmd: python -m src.pipeline.train als
+    deps:
+      - src/pipeline/train.py
+      - src/models/als_model.py
+      - data/processed/train_ratings.csv
+    params:
+      - als
+    outs:
+      - models/als/
+
+  evaluate:
+    cmd: python -m src.pipeline.evaluate
+    deps:
+      - src/pipeline/evaluate.py
+      - src/evaluation/metrics.py
+      - data/processed/test_ratings.csv
+      - models/collaborative/
+      - models/content_based/
+      - models/als/
+    metrics:
+      - models/evaluation_summary.json

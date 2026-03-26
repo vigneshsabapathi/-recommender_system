@@ -1,0 +1,40 @@
+services:
+  # ----------------------------------------------------------------
+  # FastAPI Backend -- Render Free Tier (Web Service)
+  # ----------------------------------------------------------------
+  - type: web
+    name: movie-recommender-api
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+
+    # Health check
+    healthCheckPath: /api/v1/health
+
+    # Environment variables
+    envVars:
+      - key: PYTHONPATH
+        value: /app
+      - key: MODEL_DIR
+        value: /app/models
+      - key: DATA_DIR
+        value: /app/data
+      - key: DB_PATH
+        value: /app/backend/movies.db
+      - key: DEBUG
+        value: "false"
+      - key: TMDB_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: CORS_ORIGINS
+        value: '["https://movie-recommender-frontend.vercel.app","http://localhost:3000"]'
+
+    # Build filters -- only rebuild when relevant files change
+    buildFilter:
+      paths:
+        - backend/**
+        - src/**
+        - models/**
+        - data/processed/**
+        - requirements.txt
