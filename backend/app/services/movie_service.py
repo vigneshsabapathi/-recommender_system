@@ -302,12 +302,15 @@ class MovieService:
     def _fuzzy_search(
         conn: sqlite3.Connection, query: str, limit: int
     ) -> list[sqlite3.Row]:
-        """Use ``difflib.get_close_matches`` for typo-tolerant search.
+        """Use ``difflib`` for typo-tolerant search.
 
         Two-pass approach:
           1. Match the full query against full titles (catches "Toy Stiry" -> "Toy Story (1995)").
           2. Match each query token against individual words extracted from
              titles (catches "matrx" -> "Matrix" in "The Matrix (1999)").
+
+        Results are scored by similarity so the best fuzzy matches surface
+        first, with popularity (``num_ratings``) as a tiebreaker.
 
         Candidate sets are loaded from the DB using LIKE filters based on the
         query's first characters to keep memory usage reasonable.
@@ -316,8 +319,8 @@ class MovieService:
         if not query_lower:
             return []
 
-        matched_ids: list[int] = []
-        seen: set[int] = set()
+        # movie_id -> best similarity score seen so far (higher = better)
+        scored: dict[int, float] = {}
 
         # --- Helper: fetch candidates whose title contains a LIKE pattern ---
         def _fetch_candidates(like_pattern: str) -> list[sqlite3.Row]:
@@ -327,7 +330,6 @@ class MovieService:
             ).fetchall()
 
         # --- Pass 1: full-title fuzzy match ---
-        # Gather candidates that contain any of the query's tokens (broad net)
         tokens = query_lower.split()
         all_candidates: dict[str, int] = {}
         for tok in tokens:
@@ -337,61 +339,58 @@ class MovieService:
                 all_candidates[row["title"]] = row["movie_id"]
 
         if all_candidates:
-            close_titles = difflib.get_close_matches(
-                query, list(all_candidates.keys()), n=limit, cutoff=0.45
-            )
-            if not close_titles:
-                lower_map = {t.lower(): t for t in all_candidates}
-                close_lower = difflib.get_close_matches(
-                    query_lower, list(lower_map.keys()), n=limit, cutoff=0.45
-                )
-                close_titles = [lower_map[c] for c in close_lower]
-            for t in close_titles:
-                mid = all_candidates[t]
-                if mid not in seen:
-                    seen.add(mid)
-                    matched_ids.append(mid)
+            # Score every candidate title against the query (case-insensitive)
+            for title, mid in all_candidates.items():
+                ratio = difflib.SequenceMatcher(
+                    None, query_lower, title.lower()
+                ).ratio()
+                if ratio >= 0.40:
+                    scored[mid] = max(scored.get(mid, 0.0), ratio)
 
         # --- Pass 2: per-word fuzzy match (handles "matrx" -> "Matrix") ---
-        if len(matched_ids) < limit:
-            # Build a word -> movie_id(s) mapping from the same candidate pool
-            word_to_ids: dict[str, list[int]] = {}
-            for title, mid in all_candidates.items():
-                # Strip year suffix like "(1999)" and split into words
-                clean = re.sub(r"\(\d{4}\)", "", title).strip()
-                for word in clean.split():
-                    word_clean = re.sub(r"[^a-zA-Z0-9]", "", word)
-                    if len(word_clean) >= 3:
-                        key = word_clean.lower()
-                        word_to_ids.setdefault(key, []).append(mid)
+        # Build a word -> movie_id(s) mapping from the candidate pool
+        word_to_ids: dict[str, list[int]] = {}
+        for title, mid in all_candidates.items():
+            clean = re.sub(r"\(\d{4}\)", "", title).strip()
+            for word in clean.split():
+                word_clean = re.sub(r"[^a-zA-Z0-9]", "", word)
+                if len(word_clean) >= 3:
+                    key = word_clean.lower()
+                    word_to_ids.setdefault(key, []).append(mid)
 
-            unique_words = list(word_to_ids.keys())
-            for tok in tokens:
-                if len(tok) < 2:
-                    continue
-                close_words = difflib.get_close_matches(
-                    tok.lower(), unique_words, n=limit * 2, cutoff=0.5
-                )
-                for cw in close_words:
-                    for mid in word_to_ids[cw]:
-                        if mid not in seen:
-                            seen.add(mid)
-                            matched_ids.append(mid)
-                            if len(matched_ids) >= limit:
-                                break
-                    if len(matched_ids) >= limit:
-                        break
-                if len(matched_ids) >= limit:
-                    break
+        unique_words = list(word_to_ids.keys())
+        for tok in tokens:
+            if len(tok) < 2:
+                continue
+            # Use a high cutoff (0.7) to avoid false positives like
+            # "amateur" matching "matrx" (which had 0.667 at cutoff=0.5).
+            close_words = difflib.get_close_matches(
+                tok.lower(), unique_words, n=limit * 2, cutoff=0.7
+            )
+            for cw in close_words:
+                word_ratio = difflib.SequenceMatcher(
+                    None, tok.lower(), cw
+                ).ratio()
+                for mid in word_to_ids[cw]:
+                    scored[mid] = max(scored.get(mid, 0.0), word_ratio)
 
-        if not matched_ids:
+        if not scored:
             return []
 
-        placeholders = ",".join("?" for _ in matched_ids)
-        return conn.execute(
-            f"SELECT * FROM movies WHERE movie_id IN ({placeholders}) ORDER BY num_ratings DESC",
-            matched_ids,
+        # Take the top candidates sorted by similarity score descending
+        top_ids = sorted(scored, key=lambda mid: scored[mid], reverse=True)[
+            :limit
+        ]
+
+        placeholders = ",".join("?" for _ in top_ids)
+        rows = conn.execute(
+            f"SELECT * FROM movies WHERE movie_id IN ({placeholders})",
+            top_ids,
         ).fetchall()
+
+        # Re-sort the SQL rows to match our similarity-based ordering
+        id_rank = {mid: i for i, mid in enumerate(top_ids)}
+        return sorted(rows, key=lambda r: id_rank.get(r["movie_id"], 999))
 
     # ------------------------------------------------------------------
     # Browse / paginated listing

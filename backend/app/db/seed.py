@@ -157,6 +157,9 @@ def seed_database(force: bool = False) -> int:
         conn.commit()
         logger.info("Seeded %d movies into the database", inserted)
 
+        # Back-fill avg_rating and num_ratings from the ratings CSV
+        _backfill_ratings(conn, settings)
+
         # Build the FTS5 full-text search index
         fts_count = rebuild_fts_index()
         logger.info("FTS5 index populated with %d rows", fts_count)
@@ -165,6 +168,35 @@ def seed_database(force: bool = False) -> int:
 
     finally:
         conn.close()
+
+
+def _backfill_ratings(conn: sqlite3.Connection, settings) -> None:
+    """Compute avg_rating/num_ratings from the ratings CSV and update movies."""
+    ratings_path = settings.DATA_DIR / "processed" / "ratings_clean.csv"
+    if not ratings_path.exists():
+        # Fall back to the raw ratings file
+        ratings_path = settings.DATA_DIR / "raw" / "ratings.csv"
+    if not ratings_path.exists():
+        logger.info("No ratings CSV found -- skipping rating backfill")
+        return
+
+    logger.info("Computing per-movie ratings from %s ...", ratings_path)
+    df = pd.read_csv(ratings_path, usecols=["movieId", "rating"])
+    stats = df.groupby("movieId").agg(
+        avg_rating=("rating", "mean"),
+        num_ratings=("rating", "count"),
+    ).reset_index()
+
+    batch = [
+        (round(float(r["avg_rating"]), 4), int(r["num_ratings"]), int(r["movieId"]))
+        for _, r in stats.iterrows()
+    ]
+    conn.executemany(
+        "UPDATE movies SET avg_rating = ?, num_ratings = ? WHERE movie_id = ?",
+        batch,
+    )
+    conn.commit()
+    logger.info("Back-filled ratings for %d movies", len(batch))
 
 
 def _insert_batch(conn: sqlite3.Connection, rows: list[tuple]) -> None:
