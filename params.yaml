@@ -22,6 +22,6 @@ als:
   n_recommendations: 20
 
 hybrid:
-  cf_weight: 0.4
-  content_weight: 0.3
-  als_weight: 0.3
+  cf_weight: 0.25
+  content_weight: 0.35
+  als_weight: 0.4

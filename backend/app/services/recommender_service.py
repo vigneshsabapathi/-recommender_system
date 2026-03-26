@@ -31,7 +31,7 @@ _MODEL_REGISTRY: dict[str, tuple[str, str, str]] = {
 }
 
 # Valid algorithm names exposed to the API
-VALID_ALGORITHMS = {"collaborative", "content_based", "als", "hybrid"}
+VALID_ALGORITHMS = {"collaborative", "content_based", "als", "hybrid", "blended_similar"}
 
 
 def _ensure_src_on_path() -> None:
@@ -194,13 +194,22 @@ class RecommenderService:
     def get_similar(
         self,
         movie_id: int,
-        algorithm: str = "collaborative",
+        algorithm: str = "blended_similar",
         n: int = 20,
     ) -> list[dict[str, Any]]:
         """Find similar movies to a given movie.
 
         Returns a list of dicts with ``movie_id`` and ``score``.
+
+        When *algorithm* is ``"blended_similar"`` (the default), scores from
+        the content-based model (weight 0.7) and collaborative model (weight
+        0.3) are merged after min-max normalisation, producing results that
+        respect content similarity while still accounting for user co-viewing
+        patterns.
         """
+        if algorithm == "blended_similar":
+            return self._blended_similar(movie_id, n)
+
         model = self._resolve_model(algorithm)
         if model is None:
             return []
@@ -214,6 +223,82 @@ class RecommenderService:
         return [
             {"movie_id": int(mid), "score": float(sc), "predicted_rating": None, "explanation": []}
             for mid, sc in raw_sims
+        ]
+
+    def _blended_similar(
+        self,
+        movie_id: int,
+        n: int,
+        content_weight: float = 0.7,
+        cf_weight: float = 0.3,
+    ) -> list[dict[str, Any]]:
+        """Blend content-based and collaborative similar-items scores.
+
+        Fetches ``n * 2`` candidates from each model, min-max normalises each
+        set of scores to [0, 1], then combines them as::
+
+            final_score = content_weight * content_score + cf_weight * cf_score
+
+        Returns the top *n* items sorted by ``final_score``.
+        """
+        import numpy as np
+
+        fetch_n = n * 2
+
+        # -- Content-based scores (primary signal) -------------------------
+        content_scores: dict[int, float] = {}
+        cb_model = self.models.get("content_based")
+        if cb_model is not None:
+            try:
+                raw = cb_model.similar_items(movie_id, n=fetch_n)
+                content_scores = {int(mid): float(sc) for mid, sc in raw}
+            except Exception:
+                logger.exception("content_based.similar_items() failed for movie=%d", movie_id)
+
+        # -- Collaborative scores (secondary signal) -----------------------
+        cf_scores: dict[int, float] = {}
+        cf_model = self.models.get("collaborative")
+        if cf_model is not None:
+            try:
+                raw = cf_model.similar_items(movie_id, n=fetch_n)
+                cf_scores = {int(mid): float(sc) for mid, sc in raw}
+            except Exception:
+                logger.exception("collaborative.similar_items() failed for movie=%d", movie_id)
+
+        # Fallback: if only one model is available, use it directly
+        if not content_scores and not cf_scores:
+            return []
+        if not content_scores:
+            sorted_cf = sorted(cf_scores.items(), key=lambda x: x[1], reverse=True)[:n]
+            return [{"movie_id": mid, "score": sc, "predicted_rating": None, "explanation": []} for mid, sc in sorted_cf]
+        if not cf_scores:
+            sorted_cb = sorted(content_scores.items(), key=lambda x: x[1], reverse=True)[:n]
+            return [{"movie_id": mid, "score": sc, "predicted_rating": None, "explanation": []} for mid, sc in sorted_cb]
+
+        # -- Min-max normalise each score set to [0, 1] --------------------
+        def _normalise(scores: dict[int, float]) -> dict[int, float]:
+            vals = np.array(list(scores.values()), dtype=np.float64)
+            s_min, s_max = vals.min(), vals.max()
+            spread = s_max - s_min
+            if spread > 0:
+                return {mid: (s - s_min) / spread for mid, s in scores.items()}
+            return {mid: 0.5 for mid in scores}
+
+        norm_content = _normalise(content_scores)
+        norm_cf = _normalise(cf_scores)
+
+        # -- Merge scores --------------------------------------------------
+        all_ids = set(norm_content.keys()) | set(norm_cf.keys())
+        combined: dict[int, float] = {}
+        for mid in all_ids:
+            cs = norm_content.get(mid, 0.0)
+            cfs = norm_cf.get(mid, 0.0)
+            combined[mid] = content_weight * cs + cf_weight * cfs
+
+        sorted_items = sorted(combined.items(), key=lambda x: x[1], reverse=True)[:n]
+        return [
+            {"movie_id": mid, "score": round(sc, 6), "predicted_rating": None, "explanation": []}
+            for mid, sc in sorted_items
         ]
 
     # ------------------------------------------------------------------

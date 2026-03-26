@@ -19,7 +19,7 @@ from backend.app.services.recommender_service import RecommenderService
 
 router = APIRouter(tags=["similar"])
 
-AlgorithmParam = Literal["collaborative", "content_based", "als", "hybrid"]
+AlgorithmParam = Literal["collaborative", "content_based", "als", "hybrid", "blended_similar"]
 
 
 @router.get(
@@ -30,7 +30,7 @@ AlgorithmParam = Literal["collaborative", "content_based", "als", "hybrid"]
 )
 def get_similar_movies(
     movie_id: int,
-    algorithm: AlgorithmParam = Query("collaborative", description="Similarity algorithm"),
+    algorithm: AlgorithmParam = Query("blended_similar", description="Similarity algorithm"),
     n: int = Query(20, ge=1, le=100, description="Number of similar movies"),
     rec_svc: RecommenderService = Depends(get_recommender_service),
     movie_svc: MovieService = Depends(get_movie_service),

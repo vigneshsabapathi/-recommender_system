@@ -57,7 +57,7 @@ class WeightedHybridRecommender(BaseRecommender):
         self.content_model = content_model
         self.als_model = als_model
 
-        default_weights = {"cf_weight": 0.4, "content_weight": 0.3, "als_weight": 0.3}
+        default_weights = {"cf_weight": 0.25, "content_weight": 0.35, "als_weight": 0.4}
         self.weights = weights or default_weights
 
         self.global_mean: float = _GLOBAL_MEAN_FALLBACK
