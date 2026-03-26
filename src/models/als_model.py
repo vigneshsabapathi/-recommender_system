@@ -118,27 +118,44 @@ class SparkALSRecommender(BaseRecommender):
             rank, max_iter, reg_param,
         )
 
+        import os
+        import sys
         from pyspark.sql import SparkSession
         from pyspark.ml.recommendation import ALS as SparkALS
+
+        # On Windows, PySpark looks for 'python3' which doesn't exist
+        python_exe = sys.executable
+        os.environ["PYSPARK_PYTHON"] = python_exe
+        os.environ["PYSPARK_DRIVER_PYTHON"] = python_exe
 
         spark = SparkSession.builder \
             .master("local[*]") \
             .appName("recommender_als") \
             .config("spark.driver.memory", "4g") \
-            .config("spark.sql.shuffle.partitions", "8") \
+            .config("spark.executor.memory", "2g") \
+            .config("spark.sql.shuffle.partitions", "16") \
             .config("spark.ui.showConsoleProgress", "false") \
+            .config("spark.sql.execution.arrow.pyspark.enabled", "false") \
             .getOrCreate()
 
         spark.sparkContext.setLogLevel("WARN")
 
         try:
-            # Prepare Spark DataFrame
-            ratings_pd = train_data[["userId", "movieId", "rating"]].copy()
-            ratings_pd["userId"] = ratings_pd["userId"].astype(int)
-            ratings_pd["movieId"] = ratings_pd["movieId"].astype(int)
-            ratings_pd["rating"] = ratings_pd["rating"].astype(float)
+            # Write temp CSV and read via Spark natively (avoids pandas->Spark OOM)
+            from pyspark.sql.types import StructType, StructField, IntegerType, FloatType
+            import tempfile
 
-            spark_df = spark.createDataFrame(ratings_pd)
+            schema = StructType([
+                StructField("userId", IntegerType(), False),
+                StructField("movieId", IntegerType(), False),
+                StructField("rating", FloatType(), False),
+            ])
+
+            # Save minimal CSV for Spark to read directly
+            tmp_csv = os.path.join(tempfile.gettempdir(), "als_train_ratings.csv")
+            train_data[["userId", "movieId", "rating"]].to_csv(tmp_csv, index=False)
+            spark_df = spark.read.csv(tmp_csv, header=True, schema=schema)
+            spark_df = spark_df.repartition(16)
 
             # Train ALS
             als = SparkALS(
@@ -149,7 +166,6 @@ class SparkALSRecommender(BaseRecommender):
                 itemCol="movieId",
                 ratingCol="rating",
                 coldStartStrategy=cold_start_strategy,
-                nonneg=False,
                 seed=42,
             )
             model = als.fit(spark_df)
