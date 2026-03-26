@@ -38,7 +38,17 @@ _CREATE_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_movies_num_ratings ON movies(num_ratings DESC);",
     "CREATE INDEX IF NOT EXISTS idx_movies_year ON movies(year);",
     "CREATE INDEX IF NOT EXISTS idx_movies_tmdb_id ON movies(tmdb_id);",
+    # Text index on genres to speed up LIKE-based genre filtering
+    "CREATE INDEX IF NOT EXISTS idx_movies_genres ON movies(genres);",
 ]
+
+_CREATE_FTS_TABLE = """\
+CREATE VIRTUAL TABLE IF NOT EXISTS movies_fts USING fts5(
+    title, genres, tags,
+    content=movies,
+    content_rowid=movie_id
+);
+"""
 
 
 def get_db_path() -> Path:
@@ -68,8 +78,33 @@ def init_db() -> None:
         conn.execute(_CREATE_MOVIES_TABLE)
         for idx_sql in _CREATE_INDEXES:
             conn.execute(idx_sql)
+        conn.execute(_CREATE_FTS_TABLE)
         conn.commit()
         logger.info("Database initialised at %s", db_path)
+    finally:
+        conn.close()
+
+
+def rebuild_fts_index() -> int:
+    """Rebuild the FTS5 index from the movies table.
+
+    Creates the virtual table if it does not exist, then issues a full
+    rebuild so every row in ``movies`` is indexed.
+
+    Returns
+    -------
+    int
+        Number of rows now present in the FTS index.
+    """
+    conn = get_db()
+    try:
+        conn.execute(_CREATE_FTS_TABLE)
+        conn.execute("INSERT INTO movies_fts(movies_fts) VALUES('rebuild');")
+        conn.commit()
+        row = conn.execute("SELECT COUNT(*) AS cnt FROM movies_fts;").fetchone()
+        count = row["cnt"] if row else 0
+        logger.info("FTS5 index rebuilt -- %d rows indexed", count)
+        return count
     finally:
         conn.close()
 

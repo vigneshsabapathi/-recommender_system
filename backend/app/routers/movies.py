@@ -53,6 +53,11 @@ def list_movies(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
     sort_by: Literal["avg_rating", "num_ratings", "year", "title"] = Query("num_ratings"),
+    exclude_conflicting: bool = Query(
+        True,
+        description="When True (default), exclude movies with conflicting genres "
+        "(e.g. Horror movies from Comedy results).",
+    ),
     movie_svc: MovieService = Depends(get_movie_service),
 ) -> PaginatedResponse:
     return movie_svc.get_movies(
@@ -60,4 +65,5 @@ def list_movies(
         page=page,
         per_page=per_page,
         sort_by=sort_by,
+        exclude_conflicting=exclude_conflicting,
     )

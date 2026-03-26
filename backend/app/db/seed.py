@@ -19,7 +19,7 @@ from pathlib import Path
 import pandas as pd
 
 from backend.app.config import get_settings
-from backend.app.db.database import get_db, init_db, movie_count
+from backend.app.db.database import get_db, init_db, movie_count, rebuild_fts_index
 
 logger = logging.getLogger(__name__)
 
@@ -156,6 +156,11 @@ def seed_database(force: bool = False) -> int:
 
         conn.commit()
         logger.info("Seeded %d movies into the database", inserted)
+
+        # Build the FTS5 full-text search index
+        fts_count = rebuild_fts_index()
+        logger.info("FTS5 index populated with %d rows", fts_count)
+
         return inserted
 
     finally:
