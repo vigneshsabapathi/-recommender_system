@@ -1,15 +1,14 @@
 # Data (DVC-tracked)
 data/raw/
 data/processed/
-models/collaborative/*.joblib
-models/collaborative/*.npz
-models/content_based/*.joblib
-models/als/*.npy
-models/als/als_model/
-models/hybrid/hybrid_weights.json
+models/collaborative/
+models/content_based/
+models/als/
+models/hybrid/
 
 # Python
 venv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo
