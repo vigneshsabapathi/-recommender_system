@@ -16,7 +16,7 @@ function SearchContent() {
   const { query, setQuery, results, isLoading, error } = useSearch(initialQuery);
 
   return (
-    <div className="pt-20 pb-12 px-4 md:px-12 bg-netflix-bg min-h-screen">
+    <div className="pt-24 pb-12 px-4 md:px-12 bg-netflix-bg min-h-screen">
       {/* Search input */}
       <div className="max-w-2xl mx-auto mb-10">
         <div className="relative">
@@ -86,7 +86,7 @@ export default function SearchPage() {
   return (
     <Suspense
       fallback={
-        <div className="pt-20 pb-12 px-4 md:px-12 bg-netflix-bg min-h-screen">
+        <div className="pt-24 pb-12 px-4 md:px-12 bg-netflix-bg min-h-screen">
           <div className="max-w-2xl mx-auto mb-10">
             <div className="skeleton-shimmer h-14 rounded-lg" />
           </div>

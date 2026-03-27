@@ -64,13 +64,13 @@ export default function BrowsePage() {
   const totalPages = meta?.total_pages || 1;
 
   return (
-    <div className="pt-20 pb-12 px-4 md:px-12 bg-netflix-bg min-h-screen">
+    <div className="pt-24 pb-12 px-4 md:px-12 bg-netflix-bg min-h-screen">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
           Browse Movies
         </h1>
-        <p className="text-netflix-text-secondary text-sm">
+        <p className="text-muted-foreground text-sm">
           {meta?.total_items?.toLocaleString() || "Thousands of"} movies to
           discover
         </p>
