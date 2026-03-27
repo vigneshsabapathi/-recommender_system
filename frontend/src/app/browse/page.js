@@ -77,54 +77,49 @@ function BrowseContent() {
       {/* Spacer for fixed navbar */}
       <div className="h-16" />
 
-      {/* Sticky bar - search + genre pills */}
-      <div className="sticky top-16 z-40 bg-netflix-bg/95 backdrop-blur-md border-b border-white/5 px-4 md:px-12 py-3">
-        <div className="flex items-center gap-3">
-          {/* Search input */}
-          <div className="relative flex-shrink-0">
-            <FiSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={handleSearchFocus}
-              placeholder="Search movies..."
-              className="bg-[#272727] text-white text-sm rounded-lg pl-9 pr-8 py-1.5 w-[180px] md:w-[260px] placeholder:text-white/30 border-0 outline-none focus:ring-1 focus:ring-white/20 transition-all"
-            />
-            {query && (
-              <button
-                onClick={handleClearSearch}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
-              >
-                <FiX size={14} />
-              </button>
-            )}
-          </div>
+      {/* Sticky bar - search on top, genre pills below */}
+      <div className="sticky top-16 z-40 bg-netflix-bg/95 backdrop-blur-md border-b border-white/5 px-4 md:px-12 py-3 space-y-3">
+        {/* Search input - centered */}
+        <div className="max-w-xl mx-auto relative">
+          <FiSearch size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={handleSearchFocus}
+            placeholder="Search movies, genres, keywords..."
+            className="w-full bg-[#272727] text-white text-sm rounded-lg pl-10 pr-9 py-2.5 placeholder:text-white/30 border-0 outline-none focus:ring-1 focus:ring-white/20 transition-all"
+          />
+          {query && (
+            <button
+              onClick={handleClearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+            >
+              <FiX size={14} />
+            </button>
+          )}
+        </div>
 
-          {/* Divider */}
-          <div className="w-px h-6 bg-white/10 flex-shrink-0" />
-
-          {/* Genre pills - scrollable */}
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-1">
-            {GENRES.map((g) => (
-              <button
-                key={g}
-                onClick={() => {
-                  setSelectedGenre(g);
-                  setPage(1);
-                  if (searchMode) handleClearSearch();
-                }}
-                className={`flex-shrink-0 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  !isSearching && selectedGenre === g
-                    ? "bg-white text-black"
-                    : "bg-[#272727] text-white/90 hover:bg-[#3a3a3a]"
-                }`}
-              >
-                {g}
-              </button>
-            ))}
-          </div>
+        {/* Genre pills - scrollable */}
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          {GENRES.map((g) => (
+            <button
+              key={g}
+              onClick={() => {
+                setSelectedGenre(g);
+                setPage(1);
+                if (searchMode) handleClearSearch();
+              }}
+              className={`flex-shrink-0 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                !isSearching && selectedGenre === g
+                  ? "bg-white text-black"
+                  : "bg-[#272727] text-white/90 hover:bg-[#3a3a3a]"
+              }`}
+            >
+              {g}
+            </button>
+          ))}
         </div>
       </div>
 
