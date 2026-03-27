@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { FiSearch } from "react-icons/fi";
 import useUserStore from "@/stores/userStore";
-import SearchAutocomplete from "@/components/ui/SearchAutocomplete";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -14,6 +14,7 @@ export default function Navbar() {
   const userName = useUserStore((s) => s.userName);
   const sampleUsers = useUserStore((s) => s.sampleUsers);
 
+  const router = useRouter();
   const currentUser = sampleUsers.find((u) => u.id === userId);
 
   useEffect(() => {
@@ -72,8 +73,14 @@ export default function Navbar() {
 
         {/* Right: Search + Profile */}
         <div className="flex items-center gap-4">
-          {/* Search */}
-          <SearchAutocomplete />
+          {/* Search - navigates to browse with search focused */}
+          <button
+            onClick={() => router.push("/browse?search=true")}
+            className="text-white/80 hover:text-white transition-colors"
+            aria-label="Search"
+          >
+            <FiSearch size={20} />
+          </button>
 
           {/* User Profile */}
           <Link
