@@ -2,16 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { FiSearch } from "react-icons/fi";
 import useUserStore from "@/stores/userStore";
+import SearchAutocomplete from "@/components/ui/SearchAutocomplete";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const router = useRouter();
   const pathname = usePathname();
   const userId = useUserStore((s) => s.userId);
   const userName = useUserStore((s) => s.userName);
@@ -24,17 +21,6 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const handleSearch = (e) => {
-    if (e.key === "Enter" && searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchOpen(false);
-    }
-    if (e.key === "Escape") {
-      setSearchOpen(false);
-      setSearchQuery("");
-    }
-  };
 
   const navLinks = [
     { href: "/home", label: "Home" },
@@ -87,40 +73,7 @@ export default function Navbar() {
         {/* Right: Search + Profile */}
         <div className="flex items-center gap-4">
           {/* Search */}
-          <div className="relative flex items-center">
-            {searchOpen ? (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 260, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="flex items-center bg-black/90 border border-white/30"
-              >
-                <FiSearch size={16} className="ml-2 text-white/60" />
-                <input
-                  type="text"
-                  autoFocus
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={handleSearch}
-                  onBlur={() => {
-                    if (!searchQuery) setSearchOpen(false);
-                  }}
-                  placeholder="Titles, genres..."
-                  className="w-full bg-transparent text-white text-sm px-2 py-1.5
-                             outline-none placeholder:text-white/40"
-                />
-              </motion.div>
-            ) : (
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="text-white hover:text-netflix-text-secondary transition-colors"
-                aria-label="Search"
-              >
-                <FiSearch size={20} />
-              </button>
-            )}
-          </div>
+          <SearchAutocomplete />
 
           {/* User Profile */}
           <Link

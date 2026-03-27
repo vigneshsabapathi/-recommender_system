@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { FiCheck, FiArrowRight } from "react-icons/fi";
 import GenreBadge from "@/components/ui/GenreBadge";
 import useUserStore from "@/stores/userStore";
+import { Button } from "@/components/ui/button";
 
 const GENRE_LIST = [
   "Action",
@@ -95,19 +96,24 @@ export default function ColdStartWizard({ onComplete }) {
           </div>
 
           <div className="text-center">
-            <motion.button
-              onClick={handleGetRecommendations}
-              disabled={selectedGenres.length === 0}
+            <motion.div
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className="inline-flex items-center gap-2 bg-netflix-red hover:bg-netflix-red-hover
-                         disabled:bg-netflix-card disabled:text-netflix-text-secondary/50
-                         text-white font-semibold px-8 py-3 rounded-md text-sm
-                         transition-colors disabled:cursor-not-allowed"
+              className="inline-block"
             >
-              Get Recommendations
-              <FiArrowRight size={16} />
-            </motion.button>
+              <Button
+                variant="default"
+                size="lg"
+                onClick={handleGetRecommendations}
+                disabled={selectedGenres.length === 0}
+                className="gap-2 bg-netflix-red hover:bg-netflix-red-hover
+                           disabled:bg-netflix-card disabled:text-netflix-text-secondary/50
+                           text-white font-semibold px-8 py-3 h-auto"
+              >
+                Get Recommendations
+                <FiArrowRight size={16} />
+              </Button>
+            </motion.div>
             <p className="text-netflix-text-secondary/60 text-xs mt-3">
               Selected {selectedGenres.length} genre{selectedGenres.length !== 1 ? "s" : ""}
             </p>

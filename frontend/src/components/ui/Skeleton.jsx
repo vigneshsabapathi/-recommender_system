@@ -11,7 +11,7 @@ export function Skeleton({ className = "", style = {} }) {
 
 export function MovieCardSkeleton() {
   return (
-    <div className="flex-shrink-0 w-[160px] sm:w-[200px] md:w-[220px] lg:w-[240px]">
+    <div className="flex-shrink-0 w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px]">
       <Skeleton className="w-full aspect-[2/3] rounded-md" />
       <Skeleton className="w-3/4 h-3 mt-2 rounded" />
       <Skeleton className="w-1/2 h-3 mt-1 rounded" />

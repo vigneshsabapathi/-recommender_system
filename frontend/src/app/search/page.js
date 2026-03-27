@@ -8,6 +8,7 @@ import { useSearch } from "@/hooks/useSearch";
 import MovieCard from "@/components/home/MovieCard";
 import { MovieCardSkeleton } from "@/components/ui/Skeleton";
 import ErrorState from "@/components/ui/ErrorState";
+import { Input } from "@/components/ui/input";
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -21,18 +22,15 @@ function SearchContent() {
         <div className="relative">
           <FiSearch
             size={20}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-netflix-text-secondary"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-netflix-text-secondary z-10"
           />
-          <input
+          <Input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search movies by title..."
+            placeholder="Search movies, genres..."
             autoFocus
-            className="w-full bg-netflix-card border border-netflix-border/50 rounded-lg
-                       text-white text-lg pl-12 pr-4 py-4 outline-none
-                       focus:border-white/50 transition-colors
-                       placeholder:text-netflix-text-secondary/50"
+            className="w-full bg-netflix-card border-netflix-border text-lg pl-12 pr-4 py-4 h-auto rounded-lg"
           />
         </div>
       </div>

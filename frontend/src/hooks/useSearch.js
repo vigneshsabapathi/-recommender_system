@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { searchMovies } from "@/lib/api";
 
-export function useSearch(initialQuery = "") {
+export function useSearch(initialQuery = "", limit = 20) {
   const [query, setQuery] = useState(initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const timerRef = useRef(null);
@@ -20,17 +20,17 @@ export function useSearch(initialQuery = "") {
   }, [query]);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["search", debouncedQuery],
-    queryFn: () => searchMovies(debouncedQuery, 20),
+    queryKey: ["search", debouncedQuery, limit],
+    queryFn: () => searchMovies(debouncedQuery, limit),
     staleTime: 2 * 60 * 1000,
-    enabled: debouncedQuery.trim().length >= 1,
+    enabled: debouncedQuery.trim().length >= 2,
   });
 
   return {
     query,
     setQuery,
     results: data || [],
-    isLoading: isLoading && debouncedQuery.trim().length >= 1,
+    isLoading: isLoading && debouncedQuery.trim().length >= 2,
     error,
   };
 }

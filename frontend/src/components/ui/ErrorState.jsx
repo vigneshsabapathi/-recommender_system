@@ -1,6 +1,7 @@
 "use client";
 
 import { FiAlertTriangle, FiRefreshCw } from "react-icons/fi";
+import { Button } from "@/components/ui/button";
 
 export default function ErrorState({ message, onRetry }) {
   return (
@@ -13,14 +14,10 @@ export default function ErrorState({ message, onRetry }) {
         {message || "We're having trouble loading this content. Please try again."}
       </p>
       {onRetry && (
-        <button
-          onClick={onRetry}
-          className="flex items-center gap-2 bg-netflix-red hover:bg-netflix-red-hover
-                     text-white font-medium px-6 py-2.5 rounded transition-colors"
-        >
+        <Button variant="destructive" onClick={onRetry} className="gap-2 px-6 py-2.5 h-auto">
           <FiRefreshCw size={16} />
           Try Again
-        </button>
+        </Button>
       )}
     </div>
   );

@@ -2,11 +2,19 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FiChevronDown } from "react-icons/fi";
 import MovieCard from "@/components/home/MovieCard";
 import { MovieCardSkeleton } from "@/components/ui/Skeleton";
 import ErrorState from "@/components/ui/ErrorState";
 import { useMovieList } from "@/hooks/useMovies";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const GENRES = [
   "All",
@@ -73,46 +81,48 @@ export default function BrowsePage() {
         {/* Genre pills */}
         <div className="flex flex-wrap gap-2 flex-1">
           {GENRES.map((g) => (
-            <button
+            <Badge
               key={g}
+              variant={selectedGenre === g ? "default" : "outline"}
               onClick={() => {
                 setSelectedGenre(g);
                 setPage(1);
               }}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200
-                         border ${
-                           selectedGenre === g
-                             ? "bg-netflix-red border-netflix-red text-white"
-                             : "bg-transparent border-netflix-border/40 text-netflix-text-secondary hover:border-white/40 hover:text-white"
-                         }`}
+              className={`cursor-pointer px-3 py-1.5 h-auto text-sm transition-all duration-200 ${
+                selectedGenre === g
+                  ? "bg-netflix-red border-netflix-red text-white hover:bg-netflix-red-hover"
+                  : "bg-transparent border-netflix-border/40 text-netflix-text-secondary hover:border-white/40 hover:text-white"
+              }`}
             >
               {g}
-            </button>
+            </Badge>
           ))}
         </div>
 
         {/* Sort dropdown */}
-        <div className="relative flex-shrink-0">
-          <select
+        <div className="flex-shrink-0">
+          <Select
             value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value);
+            onValueChange={(value) => {
+              setSortBy(value);
               setPage(1);
             }}
-            className="appearance-none bg-netflix-card border border-netflix-border/40
-                       text-white text-sm rounded-md pl-3 pr-10 py-2.5 outline-none
-                       cursor-pointer hover:border-white/40 transition-colors"
           >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <FiChevronDown
-            size={16}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-netflix-text-secondary pointer-events-none"
-          />
+            <SelectTrigger className="bg-netflix-card border-netflix-border/40 text-white hover:border-white/40 min-w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-netflix-dark border-netflix-border/40">
+              {SORT_OPTIONS.map((opt) => (
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value}
+                  className="text-white hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                >
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -142,15 +152,14 @@ export default function BrowsePage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 mt-10">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="px-4 py-2 rounded-md text-sm font-medium transition-colors
-                           bg-netflix-card border border-netflix-border/40 text-white
-                           hover:bg-netflix-hover disabled:opacity-30 disabled:cursor-not-allowed"
+                className="bg-netflix-card border-netflix-border/40 text-white hover:bg-netflix-hover"
               >
                 Previous
-              </button>
+              </Button>
 
               <div className="flex items-center gap-1">
                 {generatePageNumbers(page, totalPages).map((p, i) =>
@@ -162,30 +171,31 @@ export default function BrowsePage() {
                       ...
                     </span>
                   ) : (
-                    <button
+                    <Button
                       key={p}
+                      variant={page === p ? "default" : "outline"}
+                      size="icon"
                       onClick={() => setPage(p)}
-                      className={`w-9 h-9 rounded-md text-sm font-medium transition-colors ${
+                      className={
                         page === p
-                          ? "bg-netflix-red text-white"
-                          : "bg-netflix-card text-netflix-text-secondary hover:bg-netflix-hover hover:text-white"
-                      }`}
+                          ? "w-9 h-9 bg-netflix-red text-white hover:bg-netflix-red-hover"
+                          : "w-9 h-9 bg-netflix-card text-netflix-text-secondary border-netflix-border/40 hover:bg-netflix-hover hover:text-white"
+                      }
                     >
                       {p}
-                    </button>
+                    </Button>
                   )
                 )}
               </div>
 
-              <button
+              <Button
+                variant="outline"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-4 py-2 rounded-md text-sm font-medium transition-colors
-                           bg-netflix-card border border-netflix-border/40 text-white
-                           hover:bg-netflix-hover disabled:opacity-30 disabled:cursor-not-allowed"
+                className="bg-netflix-card border-netflix-border/40 text-white hover:bg-netflix-hover"
               >
                 Next
-              </button>
+              </Button>
             </div>
           )}
         </>

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { FiLayers, FiUsers, FiFilm, FiGrid } from "react-icons/fi";
 import useAlgorithmStore from "@/stores/algorithmStore";
+import { Button } from "@/components/ui/button";
 
 const ICONS = {
   layers: FiLayers,
@@ -31,23 +32,23 @@ export default function AlgorithmSwitcher() {
           const isActive = algorithm === algo.id;
 
           return (
-            <button
-              key={algo.id}
-              onClick={() => setAlgorithm(algo.id)}
-              className="relative group"
-            >
+            <div key={algo.id} className="relative group">
               <motion.div
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium
-                           transition-all duration-200 border ${
-                             isActive
-                               ? "bg-netflix-red border-netflix-red text-white shadow-lg shadow-netflix-red/20"
-                               : "bg-netflix-card border-netflix-border/40 text-netflix-text-secondary hover:border-white/30 hover:text-white"
-                           }`}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
-                <Icon size={14} />
-                <span>{algo.name}</span>
+                <Button
+                  variant={isActive ? "default" : "outline"}
+                  onClick={() => setAlgorithm(algo.id)}
+                  className={
+                    isActive
+                      ? "gap-2 bg-netflix-red border-netflix-red text-white shadow-lg shadow-netflix-red/20 hover:bg-netflix-red-hover"
+                      : "gap-2 bg-netflix-card border-netflix-border/40 text-netflix-text-secondary hover:border-white/30 hover:text-white"
+                  }
+                >
+                  <Icon size={14} />
+                  <span>{algo.name}</span>
+                </Button>
               </motion.div>
 
               {/* Tooltip */}
@@ -63,7 +64,7 @@ export default function AlgorithmSwitcher() {
                                   rotate-45" />
                 </div>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>

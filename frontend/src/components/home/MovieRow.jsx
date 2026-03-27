@@ -18,7 +18,8 @@ export default function MovieRow({
   const scrollRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isRowHovered, setIsRowHovered] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
 
   const updateScrollState = () => {
     const el = scrollRef.current;
@@ -38,7 +39,7 @@ export default function MovieRow({
   const scroll = (direction) => {
     const el = scrollRef.current;
     if (!el) return;
-    const cardWidth = el.querySelector("a")?.offsetWidth || 220;
+    const cardWidth = el.querySelector("div")?.offsetWidth || 220;
     const scrollAmount = cardWidth * 4;
     el.scrollBy({
       left: direction === "left" ? -scrollAmount : scrollAmount,
@@ -49,6 +50,8 @@ export default function MovieRow({
   // Don't render row if no movies and not loading
   if (!isLoading && (!movies || movies.length === 0) && !error) return null;
 
+  const movieCount = movies?.length || 0;
+
   return (
     <motion.section
       className="relative mb-8 md:mb-10"
@@ -56,8 +59,11 @@ export default function MovieRow({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => setIsRowHovered(true)}
+      onMouseLeave={() => {
+        setIsRowHovered(false);
+        setHoveredIndex(null);
+      }}
     >
       {/* Title */}
       <h2 className="text-lg md:text-xl font-semibold text-white mb-3 px-4 md:px-12">
@@ -77,7 +83,7 @@ export default function MovieRow({
               className={`absolute left-0 top-0 bottom-6 z-20 w-10 md:w-14
                          bg-black/60 hover:bg-black/80 flex items-center justify-center
                          transition-opacity duration-300 ${
-                           isHovered ? "opacity-100" : "opacity-0"
+                           isRowHovered ? "opacity-100" : "opacity-0"
                          }`}
               aria-label="Scroll left"
             >
@@ -85,24 +91,31 @@ export default function MovieRow({
             </button>
           )}
 
-          {/* Scrollable row */}
-          <div
-            ref={scrollRef}
-            className="flex gap-2 md:gap-3 px-4 md:px-12 overflow-x-auto scrollbar-hide
-                       scroll-smooth py-2"
-          >
-            {isLoading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <MovieCardSkeleton key={i} />
-                ))
-              : movies?.map((movie, i) => (
-                  <MovieCard
-                    key={movie?.movie?.id || movie?.id || i}
-                    movie={movie}
-                    index={i}
-                    showRank={showRank}
-                  />
-                ))}
+          {/* Outer wrapper clips horizontal overflow, inner allows vertical expansion */}
+          <div className="overflow-x-clip overflow-y-visible">
+            <div
+              ref={scrollRef}
+              className="flex gap-2 md:gap-3 px-4 md:px-12 overflow-x-auto overflow-y-visible scrollbar-hide scroll-smooth py-8"
+            >
+              {isLoading
+                ? Array.from({ length: 6 }).map((_, i) => (
+                    <MovieCardSkeleton key={i} />
+                  ))
+                : movies?.map((movie, i) => (
+                    <MovieCard
+                      key={movie?.movie?.id || movie?.id || i}
+                      movie={movie}
+                      index={i}
+                      showRank={showRank}
+                      isHovered={hoveredIndex === i}
+                      onHoverStart={() => setHoveredIndex(i)}
+                      onHoverEnd={() => setHoveredIndex(null)}
+                      isFirst={i === 0}
+                      isLast={i === movieCount - 1}
+                      hoveredIndex={hoveredIndex}
+                    />
+                  ))}
+            </div>
           </div>
 
           {/* Right arrow */}
@@ -112,7 +125,7 @@ export default function MovieRow({
               className={`absolute right-0 top-0 bottom-6 z-20 w-10 md:w-14
                          bg-black/60 hover:bg-black/80 flex items-center justify-center
                          transition-opacity duration-300 ${
-                           isHovered ? "opacity-100" : "opacity-0"
+                           isRowHovered ? "opacity-100" : "opacity-0"
                          }`}
               aria-label="Scroll right"
             >
