@@ -135,18 +135,18 @@ function BrowseContent() {
       </motion.div>
 
       {/* Content */}
-      <div className="px-4 md:px-12 pt-6 pb-12">
+      <div className="px-4 md:px-12 pb-12">
         {/* Header row */}
-        <div className="flex items-end justify-between mb-6">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl md:text-2xl font-semibold text-white">
+            <h1 className="text-lg md:text-xl font-medium text-white/90">
               {isSearching
                 ? `Results for "${query.trim()}"`
                 : selectedGenre === "All"
                   ? "Browse Movies"
                   : selectedGenre}
             </h1>
-            <p className="text-sm text-white/40 mt-0.5">
+            <p className="text-xs text-white/30 mt-0.5">
               {isSearching
                 ? `${movies.length} movies found`
                 : `${meta?.total_items?.toLocaleString() || ""} movies`}
@@ -161,8 +161,10 @@ function BrowseContent() {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="bg-[#272727] border-0 text-white/80 text-sm h-9 w-[150px] rounded-lg hover:bg-[#3a3a3a] focus:ring-0">
-                <SelectValue />
+              <SelectTrigger className="bg-white/[0.07] border border-white/[0.08] text-white/80 text-sm h-9 w-[160px] rounded-full hover:bg-white/[0.12] focus:ring-0">
+                <SelectValue placeholder="Sort by">
+                  {SORT_OPTIONS.find((o) => o.value === sortBy)?.label}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-[#212121] border-[#333]">
                 {SORT_OPTIONS.map((opt) => (
