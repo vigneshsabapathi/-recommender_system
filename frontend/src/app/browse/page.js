@@ -79,12 +79,12 @@ function BrowseContent() {
 
       {/* Search - centered */}
       <motion.div
-        className="px-4 md:px-12 mb-8"
+        className="flex justify-center px-4 mb-10"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
-        <div className="max-w-lg mx-auto relative">
+        <div className="w-full max-w-md relative">
           <FiSearch size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
           <input
             ref={searchInputRef}
@@ -108,12 +108,12 @@ function BrowseContent() {
 
       {/* Genre tags - centered, wrapped */}
       <motion.div
-        className="px-4 md:px-12 mb-10"
+        className="flex justify-center px-4 mb-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.1 }}
       >
-        <div className="flex flex-wrap justify-center gap-2.5 max-w-4xl mx-auto">
+        <div className="flex flex-wrap justify-center gap-2.5 max-w-3xl">
           {GENRES.map((g) => (
             <button
               key={g}
@@ -122,10 +122,10 @@ function BrowseContent() {
                 setPage(1);
                 if (searchMode) handleClearSearch();
               }}
-              className={`px-4 py-2 rounded-full text-[13px] font-medium tracking-wide transition-all duration-250 ${
+              className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-200 ${
                 !isSearching && selectedGenre === g
-                  ? "bg-netflix-red text-white shadow-lg shadow-netflix-red/25 scale-105"
-                  : "bg-white/[0.07] text-white/70 border border-white/[0.08] hover:bg-white/[0.12] hover:text-white hover:border-white/[0.15]"
+                  ? "bg-netflix-red text-white shadow-lg shadow-netflix-red/30"
+                  : "bg-white/[0.06] text-white/60 border border-white/[0.08] hover:bg-white/[0.12] hover:text-white hover:border-white/15"
               }`}
             >
               {g}
