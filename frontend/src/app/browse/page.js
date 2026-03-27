@@ -6,7 +6,6 @@ import MovieCard from "@/components/home/MovieCard";
 import { MovieCardSkeleton } from "@/components/ui/Skeleton";
 import ErrorState from "@/components/ui/ErrorState";
 import { useMovieList } from "@/hooks/useMovies";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -64,43 +63,45 @@ export default function BrowsePage() {
   const totalPages = meta?.total_pages || 1;
 
   return (
-    <div className="pt-24 pb-12 px-4 md:px-12 bg-netflix-bg min-h-screen">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
-          Browse Movies
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          {meta?.total_items?.toLocaleString() || "Thousands of"} movies to
-          discover
-        </p>
-      </div>
+    <div className="min-h-screen bg-netflix-bg">
+      {/* Spacer for fixed navbar */}
+      <div className="h-16" />
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-8">
-        {/* Genre pills */}
-        <div className="flex flex-wrap gap-2 flex-1">
+      {/* Sticky genre bar - sits below navbar */}
+      <div className="sticky top-16 z-40 bg-netflix-bg/95 backdrop-blur-md border-b border-white/5 px-4 md:px-12 py-3">
+        <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
           {GENRES.map((g) => (
-            <Badge
+            <button
               key={g}
-              variant={selectedGenre === g ? "default" : "outline"}
               onClick={() => {
                 setSelectedGenre(g);
                 setPage(1);
               }}
-              className={`cursor-pointer px-3 py-1.5 h-auto text-sm transition-all duration-200 ${
+              className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                 selectedGenre === g
-                  ? "bg-netflix-red border-netflix-red text-white hover:bg-netflix-red-hover"
-                  : "bg-transparent border-netflix-border/40 text-netflix-text-secondary hover:border-white/40 hover:text-white"
+                  ? "bg-white text-black"
+                  : "bg-[#272727] text-white/90 hover:bg-[#3a3a3a]"
               }`}
             >
               {g}
-            </Badge>
+            </button>
           ))}
         </div>
+      </div>
 
-        {/* Sort dropdown */}
-        <div className="flex-shrink-0">
+      {/* Content */}
+      <div className="px-4 md:px-12 pt-6 pb-12">
+        {/* Header row with title + sort */}
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <h1 className="text-xl md:text-2xl font-semibold text-white">
+              {selectedGenre === "All" ? "Browse Movies" : selectedGenre}
+            </h1>
+            <p className="text-sm text-white/40 mt-0.5">
+              {meta?.total_items?.toLocaleString() || ""} movies
+            </p>
+          </div>
+
           <Select
             value={sortBy}
             onValueChange={(value) => {
@@ -108,15 +109,15 @@ export default function BrowsePage() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="bg-netflix-card border-netflix-border/40 text-white hover:border-white/40 min-w-[160px]">
+            <SelectTrigger className="bg-[#272727] border-0 text-white/80 text-sm h-9 w-[150px] rounded-lg hover:bg-[#3a3a3a] focus:ring-0">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-netflix-dark border-netflix-border/40">
+            <SelectContent className="bg-[#212121] border-[#333]">
               {SORT_OPTIONS.map((opt) => (
                 <SelectItem
                   key={opt.value}
                   value={opt.value}
-                  className="text-white hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                  className="text-white/80 hover:bg-white/10 focus:bg-white/10 focus:text-white text-sm"
                 >
                   {opt.label}
                 </SelectItem>
@@ -124,88 +125,86 @@ export default function BrowsePage() {
             </SelectContent>
           </Select>
         </div>
-      </div>
 
-      {/* Movie Grid */}
-      {error ? (
-        <ErrorState message="Couldn't load movies." onRetry={refetch} />
-      ) : isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-          {Array.from({ length: 18 }).map((_, i) => (
-            <MovieCardSkeleton key={i} />
-          ))}
-        </div>
-      ) : movies.length > 0 ? (
-        <>
-          <motion.div
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            key={`${selectedGenre}-${sortBy}-${page}`}
-          >
-            {movies.map((movie, i) => (
-              <MovieCard key={movie.id} movie={movie} index={i} />
+        {/* Movie Grid */}
+        {error ? (
+          <ErrorState message="Couldn't load movies." onRetry={refetch} />
+        ) : isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+            {Array.from({ length: 18 }).map((_, i) => (
+              <MovieCardSkeleton key={i} />
             ))}
-          </motion.div>
+          </div>
+        ) : movies.length > 0 ? (
+          <>
+            <motion.div
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              key={`${selectedGenre}-${sortBy}-${page}`}
+            >
+              {movies.map((movie, i) => (
+                <MovieCard key={movie.id} movie={movie} index={i} />
+              ))}
+            </motion.div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-10">
-              <Button
-                variant="outline"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                className="bg-netflix-card border-netflix-border/40 text-white hover:bg-netflix-hover"
-              >
-                Previous
-              </Button>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-10">
+                <Button
+                  variant="ghost"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30"
+                >
+                  Previous
+                </Button>
 
-              <div className="flex items-center gap-1">
-                {generatePageNumbers(page, totalPages).map((p, i) =>
-                  p === "..." ? (
-                    <span
-                      key={`dots-${i}`}
-                      className="px-2 text-netflix-text-secondary"
-                    >
-                      ...
-                    </span>
-                  ) : (
-                    <Button
-                      key={p}
-                      variant={page === p ? "default" : "outline"}
-                      size="icon"
-                      onClick={() => setPage(p)}
-                      className={
-                        page === p
-                          ? "w-9 h-9 bg-netflix-red text-white hover:bg-netflix-red-hover"
-                          : "w-9 h-9 bg-netflix-card text-netflix-text-secondary border-netflix-border/40 hover:bg-netflix-hover hover:text-white"
-                      }
-                    >
-                      {p}
-                    </Button>
-                  )
-                )}
+                <div className="flex items-center gap-1">
+                  {generatePageNumbers(page, totalPages).map((p, i) =>
+                    p === "..." ? (
+                      <span
+                        key={`dots-${i}`}
+                        className="px-2 text-white/30"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                          page === p
+                            ? "bg-white text-black"
+                            : "text-white/60 hover:bg-white/10 hover:text-white"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                <Button
+                  variant="ghost"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30"
+                >
+                  Next
+                </Button>
               </div>
-
-              <Button
-                variant="outline"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                className="bg-netflix-card border-netflix-border/40 text-white hover:bg-netflix-hover"
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="text-center py-20">
-          <p className="text-netflix-text-secondary text-lg">
-            No movies found in this category.
-          </p>
-        </div>
-      )}
+            )}
+          </>
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-white/40 text-lg">
+              No movies found in this category.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
