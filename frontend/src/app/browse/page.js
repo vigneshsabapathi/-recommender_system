@@ -84,8 +84,10 @@ function BrowseContent() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
-        <div className="w-full max-w-md relative">
-          <FiSearch size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
+        <div className="w-full max-w-md flex items-center bg-white/[0.08] rounded-full border border-white/[0.06] focus-within:bg-white/[0.12] focus-within:border-white/[0.15] transition-all duration-300">
+          <span className="pl-5 text-white/30 flex-shrink-0">
+            <FiSearch size={16} />
+          </span>
           <input
             ref={searchInputRef}
             type="text"
@@ -93,12 +95,12 @@ function BrowseContent() {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={handleSearchFocus}
             placeholder="Search movies, genres, keywords..."
-            className="w-full bg-white/[0.08] text-white rounded-full pl-11 pr-10 py-3 text-sm placeholder:text-white/25 border border-white/[0.06] outline-none focus:bg-white/[0.12] focus:border-white/[0.15] focus:ring-0 transition-all duration-300"
+            className="flex-1 bg-transparent text-white py-3 pl-3 pr-4 text-sm placeholder:text-white/25 border-0 outline-none focus:ring-0"
           />
           {query && (
             <button
               onClick={handleClearSearch}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors"
+              className="pr-4 text-white/30 hover:text-white transition-colors flex-shrink-0"
             >
               <FiX size={16} />
             </button>
@@ -106,14 +108,15 @@ function BrowseContent() {
         </div>
       </motion.div>
 
-      {/* Genre tags - centered, wrapped */}
+      {/* Genre tags - single row, centered, scrollable */}
       <motion.div
-        className="flex justify-center px-4 mb-12"
+        className="px-4 mb-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.1 }}
       >
-        <div className="flex flex-wrap justify-center gap-2.5 max-w-3xl">
+        <div className="flex justify-center">
+          <div className="flex flex-nowrap gap-2.5 overflow-x-auto scrollbar-hide py-1 px-1">
           {GENRES.map((g) => (
             <button
               key={g}
@@ -122,7 +125,7 @@ function BrowseContent() {
                 setPage(1);
                 if (searchMode) handleClearSearch();
               }}
-              className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-200 ${
+              className={`flex-shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-200 ${
                 !isSearching && selectedGenre === g
                   ? "bg-netflix-red text-white shadow-lg shadow-netflix-red/30"
                   : "bg-white/[0.06] text-white/60 border border-white/[0.08] hover:bg-white/[0.12] hover:text-white hover:border-white/15"
@@ -131,6 +134,7 @@ function BrowseContent() {
               {g}
             </button>
           ))}
+          </div>
         </div>
       </motion.div>
 
